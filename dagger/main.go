@@ -56,6 +56,13 @@ func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
 			"-h", "mysqlsvc",
 			"-u", "fmysql",
 			"-ppassword", // Note: The -p and password are concatenated
+			"-e", "USE fmysql; SHOW VARIABLES LIKE 'config_file';",
+		}).
+		WithExec([]string{
+			"mysql",
+			"-h", "mysqlsvc",
+			"-u", "fmysql",
+			"-ppassword", // Note: The -p and password are concatenated
 			"-e", "USE fmysql; SELECT * FROM testable ORDER BY created_at DESC LIMIT 5;",
 		}).Stdout(ctx)
 
