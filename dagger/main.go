@@ -34,7 +34,7 @@ func (m *Fmysql) Fmysql(source *dagger.Directory) *dagger.Container {
 		WithFile("/etc/mysql/conf.d/docker.cnf", source.File("docker.cnf"), dagger.ContainerWithFileOpts{
 			Permissions: 0644,
 		}).
-		WithDefaultArgs([]string{"mysqld", "--mysql-native-password=FORCE"}).
+		WithDefaultArgs([]string{"mysqld", "--mysql-native-password=FORCE", "--sql_mode=NO_ENGINE_SUBSTITUTION"}).
 		WithExposedPort(3306)
 }
 
