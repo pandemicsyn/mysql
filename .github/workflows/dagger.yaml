@@ -13,6 +13,6 @@ jobs:
       - uses: dagger/dagger-for-github@v6
         with:
           version: "latest"
-          dagger-flags: "--porgress plain"
+          dagger-flags: "--progress plain"
           verb: call
           args: testit --source=.
