@@ -21,7 +21,7 @@ import (
 
 type Fmysql struct{}
 
-func (m *Fmysql) fmysql(source *dagger.Directory) *dagger.Container {
+func (m *Fmysql) Fmysql(source *dagger.Directory) *dagger.Container {
 	return dag.Container().From("mysql:8.4").
 		WithFile("/docker-entrypoint-initdb.d/fixtures.sql", source.File("/fixtures.sql"), dagger.ContainerWithFileOpts{
 			Owner: "mysql:mysql",
@@ -31,14 +31,14 @@ func (m *Fmysql) fmysql(source *dagger.Directory) *dagger.Container {
 		WithEnvVariable("MYSQL_DATABASE", "fmysql").
 		WithEnvVariable("MYSQL_RANDOM_ROOT_PASSWORD", "1").
 		WithFile("/etc/mysql/conf.d/docker.cnf", source.File("docker.cnf"), dagger.ContainerWithFileOpts{
-			Permissions: 0755,
+			Permissions: 0644,
 		}).
 		WithDefaultArgs([]string{"mysqld", "--mysql-native-password=FORCE"}).
 		WithExposedPort(3306)
 }
 
 func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
-	mysqlCtr := m.fmysql(source)
+	mysqlCtr := m.Fmysql(source)
 	mysqlSvc := mysqlCtr.AsService()
 	ctx := context.Background()
 
