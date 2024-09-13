@@ -56,6 +56,7 @@ func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
 		WithFile("/etc/mysql/conf.d/docker.cnf", source.File("docker.cnf"), dagger.ContainerWithFileOpts{
 			Permissions: 0644,
 		}).
+		WithExec([]string{"echo", "$MYSQL_SQL_MODE"}).                  // should be empty
 		WithExec([]string{"ls", "-l", "/etc/mysql/conf.d"}).            // should be same as the one Fmysql container
 		WithExec([]string{"ls", "-l", "/etc/mysql/conf.d/docker.cnf"}). // should be same as the one Fmysql container
 		WithExec([]string{"cat", "/etc/mysql/conf.d/docker.cnf"}).      // should be same as the one Fmysql container
