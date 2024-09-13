@@ -30,6 +30,7 @@ func (m *Fmysql) Fmysql(source *dagger.Directory) *dagger.Container {
 		WithEnvVariable("MYSQL_PASSWORD", "password").
 		WithEnvVariable("MYSQL_DATABASE", "fmysql").
 		WithEnvVariable("MYSQL_RANDOM_ROOT_PASSWORD", "1").
+		WithEnvVariable("MYSQL_LOG_CONSOLE", "1").
 		WithFile("/etc/mysql/conf.d/docker.cnf", source.File("docker.cnf"), dagger.ContainerWithFileOpts{
 			Permissions: 0644,
 		}).
@@ -44,25 +45,32 @@ func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
 
 	return dag.Container().From("mysql:8.4").
 		WithServiceBinding("mysqlsvc", mysqlSvc).
+		WithFile("/docker-entrypoint-initdb.d/fixtures.sql", source.File("/fixtures.sql"), dagger.ContainerWithFileOpts{
+			Owner: "mysql:mysql",
+		}).
+		WithEnvVariable("MYSQL_USER", "fmysql").
+		WithEnvVariable("MYSQL_PASSWORD", "password").
+		WithEnvVariable("MYSQL_DATABASE", "fmysql").
+		WithEnvVariable("MYSQL_RANDOM_ROOT_PASSWORD", "1").
+		WithEnvVariable("MYSQL_LOG_CONSOLE", "1").
+		WithFile("/etc/mysql/conf.d/docker.cnf", source.File("docker.cnf"), dagger.ContainerWithFileOpts{
+			Permissions: 0644,
+		}).
+		WithExec([]string{"ls", "-l", "/etc/mysql/conf.d"}).            // should be same as the one Fmysql container
+		WithExec([]string{"ls", "-l", "/etc/mysql/conf.d/docker.cnf"}). // should be same as the one Fmysql container
+		WithExec([]string{"cat", "/etc/mysql/conf.d/docker.cnf"}).      // should be same as the one Fmysql container
 		WithExec([]string{
 			"mysql",
 			"-h", "mysqlsvc",
 			"-u", "fmysql",
-			"-ppassword", // Note: The -p and password are concatenated
+			"-ppassword",
 			"-e", "USE fmysql; SELECT @@sql_mode;",
 		}).
 		WithExec([]string{
 			"mysql",
 			"-h", "mysqlsvc",
 			"-u", "fmysql",
-			"-ppassword", // Note: The -p and password are concatenated
-			"-e", "USE fmysql; SHOW VARIABLES LIKE 'config_file';",
-		}).
-		WithExec([]string{
-			"mysql",
-			"-h", "mysqlsvc",
-			"-u", "fmysql",
-			"-ppassword", // Note: The -p and password are concatenated
+			"-ppassword",
 			"-e", "USE fmysql; SELECT * FROM testable ORDER BY created_at DESC LIMIT 5;",
 		}).Stdout(ctx)
 
