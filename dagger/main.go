@@ -23,7 +23,7 @@ type Fmysql struct{}
 
 func (m *Fmysql) Fmysql(source *dagger.Directory) *dagger.Container {
 	return dag.Container().From("mysql:8.4").
-		WithFile("/docker-entrypoint-initdb.d/fixtures.sql", source.File("/fixtures.sql"), dagger.ContainerWithFileOpts{
+		WithFile("/docker-entrypoint-initdb.d/fixtures.sql", source.File("/fixtures-timestamp.sql"), dagger.ContainerWithFileOpts{
 			Owner: "mysql:mysql",
 		}).
 		WithEnvVariable("MYSQL_USER", "fmysql").
@@ -52,14 +52,6 @@ func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
 		WithEnvVariable("MYSQL_PASSWORD", "password").
 		WithEnvVariable("MYSQL_DATABASE", "fmysql").
 		WithEnvVariable("MYSQL_RANDOM_ROOT_PASSWORD", "1").
-		WithEnvVariable("MYSQL_LOG_CONSOLE", "1").
-		WithFile("/etc/mysql/conf.d/docker.cnf", source.File("docker.cnf"), dagger.ContainerWithFileOpts{
-			Permissions: 0644,
-		}).
-		WithExec([]string{"echo", "$MYSQL_SQL_MODE"}).                  // should be empty
-		WithExec([]string{"ls", "-l", "/etc/mysql/conf.d"}).            // should be same as the one Fmysql container
-		WithExec([]string{"ls", "-l", "/etc/mysql/conf.d/docker.cnf"}). // should be same as the one Fmysql container
-		WithExec([]string{"cat", "/etc/mysql/conf.d/docker.cnf"}).      // should be same as the one Fmysql container
 		WithExec([]string{
 			"mysql",
 			"-h", "mysqlsvc",
