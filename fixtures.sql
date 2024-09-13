@@ -4,4 +4,5 @@ CREATE TABLE IF NOT EXISTS testable (
 );
 
 -- Insert a sample record
-INSERT INTO testable (created_at) VALUES ("2019-01-01T01:23:45.678Z");
+--INSERT INTO testable (created_at) VALUES ("2019-01-01T01:23:45.678Z");
+INSERT INTO testable (created_at) VALUES (NOW());
