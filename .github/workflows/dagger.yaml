@@ -17,3 +17,15 @@ jobs:
           verb: call
           args: testit --source=.
           cloud-token: ${{ secrets.DAGGER_TOKEN }}
+  matrix-build:
+    name: dagger matrix
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dagger/dagger-for-github@v6
+        with:
+          version: "latest"
+          verb: call
+          args: matrix-build --source=.
+          cloud-token: ${{ secrets.DAGGER_TOKEN }}
+

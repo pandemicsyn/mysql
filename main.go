@@ -6,5 +6,5 @@ import (
 )
 
 func main() {
-	fmt.Printf("Concurrent?", time.Now())
+	fmt.Printf("Concurrent? %v", time.Now())
 }

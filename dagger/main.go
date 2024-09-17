@@ -18,6 +18,7 @@ import (
 	"context"
 	"dagger/fmysql/internal/dagger"
 	"fmt"
+	"time"
 )
 
 type Fmysql struct{}
@@ -79,6 +80,9 @@ func (m *Fmysql) MatrixBuild(
 	ctx context.Context,
 	// +defaultPath="/"
 	src *dagger.Directory,
+	// +optional
+	// +default=false
+	cacheBust bool,
 ) *dagger.Directory {
 	gooses := []string{"linux", "darwin"}
 	goarches := []string{"amd64", "arm64"}
@@ -96,11 +100,19 @@ func (m *Fmysql) MatrixBuild(
 			// create directory for each OS and architecture
 			path := fmt.Sprintf("build/%s/%s/", goos, goarch)
 
-			// build artifact
-			build := golang.
-				WithEnvVariable("GOOS", goos).
-				WithEnvVariable("GOARCH", goarch).
-				WithExec([]string{"go", "build", "-o", path})
+			var build *dagger.Container
+			if cacheBust {
+				build = golang.
+					WithEnvVariable("CACHE_BUST", time.Now().String()).
+					WithEnvVariable("GOOS", goos).
+					WithEnvVariable("GOARCH", goarch).
+					WithExec([]string{"go", "build", "-o", path})
+			} else {
+				build = golang.
+					WithEnvVariable("GOOS", goos).
+					WithEnvVariable("GOARCH", goarch).
+					WithExec([]string{"go", "build", "-o", path})
+			}
 
 			// add build to outputs
 			outputs = outputs.WithDirectory(path, build.Directory(path))
