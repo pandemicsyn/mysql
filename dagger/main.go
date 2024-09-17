@@ -17,6 +17,7 @@ package main
 import (
 	"context"
 	"dagger/fmysql/internal/dagger"
+	"fmt"
 )
 
 type Fmysql struct{}
@@ -43,6 +44,8 @@ func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
 	mysqlSvc := mysqlCtr.AsService()
 	ctx := context.Background()
 
+	_, _ = m.Print("overkill")
+
 	return dag.Container().From("mysql:8.4").
 		WithServiceBinding("mysqlsvc", mysqlSvc).
 		WithFile("/docker-entrypoint-initdb.d/fixtures.sql", source.File("/fixtures.sql"), dagger.ContainerWithFileOpts{
@@ -66,5 +69,44 @@ func (m *Fmysql) Testit(source *dagger.Directory) (string, error) {
 			"-ppassword",
 			"-e", "USE fmysql; SELECT * FROM testable ORDER BY created_at DESC LIMIT 5;",
 		}).Stdout(ctx)
+}
 
+func (m *Fmysql) Print(msg string) (string, error) {
+	return dag.Container().From("alpine:3.14").WithExec([]string{"echo", msg}).Stdout(context.Background())
+}
+
+func (m *Fmysql) MatrixBuild(
+	ctx context.Context,
+	// +defaultPath="/"
+	src *dagger.Directory,
+) *dagger.Directory {
+	gooses := []string{"linux", "darwin"}
+	goarches := []string{"amd64", "arm64"}
+
+	// create empty directory to put build artifacts
+	outputs := dag.Directory()
+
+	golang := dag.Container().
+		From("golang:latest").
+		WithDirectory("/src", src).
+		WithWorkdir("/src")
+
+	for _, goos := range gooses {
+		for _, goarch := range goarches {
+			// create directory for each OS and architecture
+			path := fmt.Sprintf("build/%s/%s/", goos, goarch)
+
+			// build artifact
+			build := golang.
+				WithEnvVariable("GOOS", goos).
+				WithEnvVariable("GOARCH", goarch).
+				WithExec([]string{"go", "build", "-o", path})
+
+			// add build to outputs
+			outputs = outputs.WithDirectory(path, build.Directory(path))
+		}
+	}
+
+	// return build directory
+	return outputs
 }
