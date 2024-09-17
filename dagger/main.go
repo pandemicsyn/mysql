@@ -102,7 +102,7 @@ func (m *Fmysql) MatrixBuild(
 				WithExec([]string{"go", "build", "-o", path}).
 				WithExec([]string{"sleep", fmt.Sprintf("%d", i+n*2)}) // sleeping to check timespans
 
-			outputs = outputs.WithDirectory(path, build.Directory(path))
+			outputs = outputs.WithDirectory(path, build.Directory(path)) // final aggregation is where u see the "concurrency" in the logs
 		}
 	}
 
