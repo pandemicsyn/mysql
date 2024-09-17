@@ -26,6 +26,6 @@ jobs:
         with:
           version: "latest"
           verb: call
-          args: matrix-build --source=.
+          args: matrix-build
           cloud-token: ${{ secrets.DAGGER_TOKEN }}
 
